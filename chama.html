@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Chama Manager</title>
+<meta name="theme-color" content="#6366f1"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#070b14;--card:#131a2b;--card2:#1c2540;--primary:#6366f1;--primary2:#818cf8;--primary-glow:rgba(99,102,241,.4);--accent:#ec4899;--success:#10b981;--danger:#f43f5e;--warning:#f59e0b;--info:#06b6d4;--text:#f1f5f9;--muted:#94a3b8;--border:rgba(148,163,184,.1);--radius:18px;--shadow:0 10px 40px rgba(0,0,0,.4);--font:'Plus Jakarta Sans',system-ui,sans-serif}
+[data-theme=light]{--bg:#f0f4ff;--card:#fff;--card2:#f1f5ff;--primary:#4f46e5;--primary2:#6366f1;--primary-glow:rgba(79,70,229,.25);--accent:#db2777;--success:#059669;--danger:#e11d48;--warning:#d97706;--info:#0891b2;--text:#0f172a;--muted:#64748b;--border:rgba(15,23,42,.07);--shadow:0 10px 40px rgba(79,70,229,.08)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;line-height:1.5;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 90% 60% at 10% -20%,rgba(99,102,241,.22),transparent),radial-gradient(ellipse 70% 50% at 95% 5%,rgba(236,72,153,.14),transparent),radial-gradient(ellipse 60% 40% at 50% 110%,rgba(16,185,129,.1),transparent);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;min-height:100dvh}
+.screen{display:none;flex-direction:column;min-height:100dvh;padding:16px;padding-bottom:36px;max-width:480px;margin:0 auto;animation:fadeSlide .28s cubic-bezier(.22,1,.36,1)}
+.screen.active{display:flex}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.header{display:flex;align-items:center;gap:10px;margin-bottom:18px;min-height:48px}
+.header h1{flex:1;font-size:1.2rem;font-weight:800;letter-spacing:-.03em}
+.icon-btn{width:44px;height:44px;border:none;border-radius:14px;background:var(--card2);color:var(--text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+.icon-btn:active{transform:scale(.92)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 18px;border:none;border-radius:14px;font-family:var(--font);font-size:.95rem;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary2));box-shadow:0 6px 20px var(--primary-glow);transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn-secondary{background:var(--card2);color:var(--text);box-shadow:none;border:1px solid var(--border)}
+.btn-danger{background:linear-gradient(135deg,#f43f5e,#fb7185)}
+.btn-accent{background:linear-gradient(135deg,#ec4899,#f472b6)}
+.btn-sm{padding:9px 14px;font-size:.82rem;border-radius:10px;width:auto;box-shadow:none}
+.btn-row{display:flex;gap:10px;margin-bottom:12px}
+.btn-row .btn{flex:1}
+.input,.select,.textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;background:var(--card2);color:var(--text);font-family:var(--font);font-size:.95rem;margin-bottom:12px;outline:none}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-glow)}
+.textarea{min-height:130px;resize:vertical}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.card-title{font-weight:700;font-size:1.05rem;margin-bottom:2px}
+.card-sub{font-size:.85rem;color:var(--muted)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.stat-card{background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--border);position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;opacity:.12}
+.stat-card:nth-child(1)::before{background:var(--primary)}
+.stat-card:nth-child(2)::before{background:var(--success)}
+.stat-card:nth-child(3)::before{background:var(--warning)}
+.stat-card:nth-child(4)::before{background:var(--danger)}
+.stat-card:nth-child(5)::before{background:var(--info)}
+.stat-card:nth-child(6)::before{background:var(--accent)}
+.stat-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.stat-value{font-size:1.2rem;font-weight:800;letter-spacing:-.03em}
+.alert{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.25);color:var(--warning);padding:11px 14px;border-radius:12px;font-size:.85rem;margin-bottom:8px;font-weight:600}
+.progress-wrap{display:flex;align-items:center;gap:8px;margin:6px 0}
+.progress{flex:1;height:8px;background:var(--card2);border-radius:99px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2),#a78bfa);border-radius:99px;transition:width .6s}
+.progress-bar.full{background:linear-gradient(90deg,var(--success),#34d399)}
+.list-item{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--border)}
+.list-item .title{font-weight:700}
+.list-item .meta{font-size:.8rem;color:var(--muted);margin-top:3px;line-height:1.45}
+.fab{position:fixed;bottom:24px;right:max(24px,calc(50% - 216px));width:60px;height:60px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-size:1.9rem;font-weight:300;cursor:pointer;box-shadow:0 8px 28px var(--primary-glow);z-index:50;display:flex;align-items:center;justify-content:center}
+.fab:active{transform:scale(.88)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .28s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);border-top:1px solid var(--border)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal h2{font-size:1.15rem;margin-bottom:16px;font-weight:800}
+.modal-handle{width:40px;height:4px;background:var(--muted);border-radius:99px;margin:0 auto 16px;opacity:.4}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-140%);background:var(--card);color:var(--text);padding:13px 22px;border-radius:14px;font-size:.9rem;font-weight:600;box-shadow:var(--shadow);border:1px solid var(--border);z-index:200;transition:transform .4s;max-width:90%;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--success)}
+.toast.error{border-color:var(--danger)}
+.auth-hero{text-align:center;padding:48px 0 28px}
+.auth-hero .logo{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,#6366f1,#ec4899,#06b6d4);background-size:200% 200%;animation:gradientShift 4s ease infinite;display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 18px;box-shadow:0 16px 40px rgba(99,102,241,.45)}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.auth-hero h1{font-size:1.85rem;font-weight:800;letter-spacing:-.04em;background:linear-gradient(135deg,#818cf8,#e879f9,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.auth-hero p{color:var(--muted);font-size:.9rem;margin-top:6px;font-weight:500}
+.spacer{flex:1}
+.muted{color:var(--muted);font-size:.85rem}
+.text-success{color:var(--success)}.text-danger{color:var(--danger)}.text-warning{color:var(--warning)}.text-primary{color:var(--primary2)}.text-info{color:var(--info)}
+.bold{font-weight:700}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.flex-center{display:flex;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 11px;border-radius:99px;font-size:.72rem;font-weight:700;background:rgba(99,102,241,.15);color:var(--primary2)}
+.chip-danger{background:rgba(244,63,94,.15);color:var(--danger)}
+.chip-success{background:rgba(16,185,129,.15);color:var(--success)}
+.chip-warning{background:rgba(245,158,11,.15);color:var(--warning)}
+.chip-info{background:rgba(6,182,212,.15);color:var(--info)}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:.95rem;font-weight:500}
+.empty .empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:.5}
+.version{text-align:center;font-size:.75rem;color:var(--muted);margin-top:16px;font-weight:500}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
+.meeting-stat{margin-bottom:22px}
+.meeting-stat .label{font-size:.85rem;color:var(--muted);font-weight:600}
+.meeting-stat .value{font-size:1.85rem;font-weight:800;letter-spacing:-.04em}
+.action-btn{display:flex;align-items:center;gap:14px;width:100%;padding:15px 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:var(--font);font-size:.95rem;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:left}
+.action-btn:active{transform:scale(.98);background:var(--card2)}
+.action-btn .icon{font-size:1.25rem;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--card2);flex-shrink:0}
+.status-board{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.status-pill{text-align:center;padding:12px 8px;border-radius:14px;border:1px solid var(--border);background:var(--card)}
+.status-pill .num{font-size:1.5rem;font-weight:800}
+.status-pill .lbl{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase}
+.status-pill.paid .num{color:var(--success)}
+.status-pill.pending .num{color:var(--warning)}
+.member-status{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border-radius:14px;border:1px solid var(--border);margin-bottom:8px}
+.member-status .avatar{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;flex-shrink:0;color:#fff}
+.member-status .info{flex:1;min-width:0}
+.member-status .name{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.member-status .detail{font-size:.78rem;color:var(--muted)}
+.template-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.template-chip{padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:var(--card2);color:var(--text);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer}
+.template-chip:active,.template-chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.schedule-table{width:100%;border-collapse:collapse;font-size:.85rem;margin:12px 0}
+.schedule-table th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.schedule-table td{padding:10px;border-bottom:1px solid var(--border);font-weight:500}
+.schedule-table tr:last-child td{border-bottom:none}
+.receipt{background:#fff;color:#0f172a;border-radius:16px;padding:24px;font-family:var(--font);max-width:360px;margin:0 auto}
+.receipt-header{text-align:center;border-bottom:2px dashed #e2e8f0;padding-bottom:16px;margin-bottom:16px}
+.receipt-header .logo-r{font-size:1.8rem;margin-bottom:4px}
+.receipt-header h3{font-size:1.1rem;font-weight:800;color:#4f46e5}
+.receipt-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.9rem}
+.receipt-row .label{color:#64748b}
+.receipt-row .val{font-weight:700}
+.receipt-total{border-top:2px dashed #e2e8f0;margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;font-size:1.15rem;font-weight:800}
+.receipt-footer{text-align:center;margin-top:16px;font-size:.75rem;color:#94a3b8}
+.lock-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.lock-screen .lock-icon{font-size:3rem;margin-bottom:16px}
+.pin-dots{display:flex;gap:14px;margin:24px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--primary);transition:all .15s}
+.pin-dot.filled{background:var(--primary);box-shadow:0 0 12px var(--primary-glow)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;width:100%}
+.pin-key{aspect-ratio:1;border:none;border-radius:50%;background:var(--card2);color:var(--text);font-size:1.4rem;font-weight:700;font-family:var(--font);cursor:pointer;border:1px solid var(--border)}
+.pin-key:active{transform:scale(.9);background:var(--primary);color:#fff}
+.section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 10px}
+.greeting{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(236,72,153,.1));border:1px solid rgba(99,102,241,.2);border-radius:16px;padding:16px;margin-bottom:16px}
+.greeting h2{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+.greeting p{font-size:.85rem;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+<div id="lock-overlay" style="display:none"></div>
+<script>
+const APP_VERSION="3.0";
+const FREQUENCIES=["Weekly","Bi-Weekly","Monthly","Quarterly"];
+const STORAGE_KEY="chama_manager_v3";
+const LOCK_TIMEOUT=3*60*1000;
+const BROADCAST_TEMPLATES=[
+  {id:"contrib",label:"💰 Contribution Due",text:"Hello members,\n\nThis is a friendly reminder that your contribution of KES {amount} is due this {day}.\n\nPlease make your payment on time. Thank you!"},
+  {id:"overdue",label:"🔴 Loan Overdue",text:"Hello,\n\nThis is a reminder that your loan repayment is overdue. Kindly clear the outstanding balance as soon as possible.\n\nThank you for your cooperation."},
+  {id:"meeting",label:"📅 Meeting Reminder",text:"Hello members,\n\nOur next meeting is on {day} at {location}.\n\nPlease be on time. Looking forward to seeing you all!"},
+  {id:"welcome",label:"👋 Welcome",text:"Welcome to {chama}!\n\nWe're glad to have you as a member. Contributions are KES {amount} ({frequency}).\n\nFeel free to reach out if you have any questions."},
+  {id:"thank",label:"✅ Thank You",text:"Thank you for your contribution of KES {amount}!\n\nYour support keeps our chama strong. 💪"},
+  {id:"custom",label:"✏️ Custom",text:""}
+];
+
+let state={users:[],chamas:[],members:[],contributions:[],loans:[],repayments:[],nextId:{user:1,chama:1,member:1,contribution:1,loan:1,repayment:1}};
+let currentUser=null,currentChamaId=null,selectedMemberId=null,currentScreen="login",theme="dark";
+let lastActivity=Date.now(),isLocked=false,lockPinBuffer="";
+
+function load(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){const data=JSON.parse(raw);state={...state,...data}}}catch(e){}}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){}}
+function uid(type){const id=state.nextId[type]++;save();return id}
+function now(){return new Date().toISOString().slice(0,19).replace("T"," ")}
+function today(){return new Date().toISOString().slice(0,10)}
+function yearMonth(){return new Date().toISOString().slice(0,7)}
+function formatKES(n){return "KES "+Number(n||0).toLocaleString("en-KE",{maximumFractionDigits:0})}
+function formatKESDec(n){return "KES "+Number(n||0).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){if(!s)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function initials(name){return (name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+function avatarColor(name){const colors=["#6366f1","#ec4899","#10b981","#f59e0b","#06b6d4","#8b5cf6","#f43f5e","#14b8a6"];let h=0;for(let i=0;i<(name||"").length;i++)h=name.charCodeAt(i)+((h<<5)-h);return colors[Math.abs(h)%colors.length]}
+
+function toast(msg,success=true){const el=document.getElementById("toast");el.textContent=(success?"✅ ":"⚠ ")+msg;el.className="toast show "+(success?"success":"error");clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove("show"),2400)}
+function openModal(html){document.getElementById("modal-content").innerHTML='<div class="modal-handle"></div>'+html;document.getElementById("modal-overlay").classList.add("open")}
+function closeModal(){document.getElementById("modal-overlay").classList.remove("open")}
+function hashPin(pin,salt){let h=0;const s=(salt||"")+pin;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return Math.abs(h).toString(16)+s.length.toString(16)}
+function makeSalt(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
+function applyTheme(t){theme=t||"dark";document.documentElement.setAttribute("data-theme",theme==="light"?"light":"dark")}
+
+function resetActivity(){lastActivity=Date.now()}
+function checkLock(){if(currentUser&&!isLocked&&(Date.now()-lastActivity>LOCK_TIMEOUT))showLockScreen()}
+setInterval(checkLock,10000);
+document.addEventListener("click",resetActivity);
+document.addEventListener("touchstart",resetActivity);
+document.addEventListener("keydown",resetActivity);
+
+function showLockScreen(){
+  isLocked=true;lockPinBuffer="";
+  const overlay=document.getElementById("lock-overlay");
+  overlay.style.display="block";
+  let keys="";
+  [1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(k=>{
+    if(k==="")keys+="<div></div>";
+    else keys+='<button class="pin-key" onclick="lockKey(\''+k+'\')">'+k+'</button>';
+  });
+  overlay.innerHTML='<div class="lock-screen"><div class="lock-icon">🔒</div><h2 style="font-weight:800">App Locked</h2><p class="muted mt-8">Enter your PIN to continue</p><div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div><div class="pin-pad">'+keys+'</div></div>';
+}
+function lockKey(k){
+  if(k==="⌫")lockPinBuffer=lockPinBuffer.slice(0,-1);
+  else if(lockPinBuffer.length<4)lockPinBuffer+=k;
+  const dots=document.querySelectorAll("#pin-dots .pin-dot");
+  dots.forEach((d,i)=>d.classList.toggle("filled",i<lockPinBuffer.length));
+  if(lockPinBuffer.length===4){
+    if(hashPin(lockPinBuffer,currentUser.salt)===currentUser.pin){
+      isLocked=false;lockPinBuffer="";
+      document.getElementById("lock-overlay").style.display="none";
+      resetActivity();toast("Unlocked");
+    }else{toast("Wrong PIN",false);lockPinBuffer="";dots.forEach(d=>d.classList.remove("filled"))}
+  }
+}
+
+function getChama(id){return state.chamas.find(c=>c.id===id)}
+function getMember(id){return state.members.find(m=>m.id===id)}
+function getMembers(chamaId,search){
+  let list=state.members.filter(m=>m.chama_id===chamaId);
+  if(search){const q=search.toLowerCase();list=list.filter(m=>(m.name||"").toLowerCase().includes(q)||(m.phone||"").toLowerCase().includes(q)||(m.role||"").toLowerCase().includes(q))}
+  return list.sort((a,b)=>(a.name||"").localeCompare(b.name||""))
+}
+function getMemberRole(chamaId,userId){const m=state.members.find(m=>m.chama_id===chamaId&&m.user_id===userId);return m?m.role:null}
+function getContributions(chamaId,search){
+  let list=state.contributions.filter(c=>c.chama_id===chamaId).map(c=>{const m=getMember(c.member_id);return{...c,member_name:m?m.name:"Unknown"}});
+  if(search){const q=search.toLowerCase();list=list.filter(c=>(c.member_name||"").toLowerCase().includes(q)||(c.reference||"").toLowerCase().includes(q))}
+  return list.sort((a,b)=>b.id-a.id)
+}
+function getLoans(chamaId){return state.loans.filter(l=>l.chama_id===chamaId).map(l=>{const m=getMember(l.member_id);return{...l,member_name:m?m.name:"Unknown"}}).sort((a,b)=>b.id-a.id)}
+function getRepayments(chamaId){
+  return state.repayments.filter(r=>{const loan=state.loans.find(l=>l.id===r.loan_id);return loan&&loan.chama_id===chamaId}).map(r=>{
+    const loan=state.loans.find(l=>l.id===r.loan_id);const m=getMember(loan.member_id);
+    return{...r,member_name:m?m.name:"Unknown",loan_reference:loan.reference}
+  }).sort((a,b)=>b.id-a.id)
+}
+function getMonthContribution(memberId,ym){ym=ym||yearMonth();return state.contributions.filter(c=>c.member_id===memberId&&c.date.startsWith(ym)).reduce((s,c)=>s+c.amount,0)}
+function memberStats(memberId){
+  const contrib=state.contributions.filter(c=>c.member_id===memberId).reduce((s,c)=>s+c.amount,0);
+  const loans=state.loans.filter(l=>l.member_id===memberId).reduce((s,l)=>s+l.amount,0);
+  const total=state.loans.filter(l=>l.member_id===memberId).reduce((s,l)=>s+l.total,0);
+  const repaid=state.repayments.filter(r=>{const loan=state.loans.find(l=>l.id===r.loan_id);return loan&&loan.member_id===memberId}).reduce((s,r)=>s+r.amount,0);
+  const months=[...new Set(state.contributions.filter(c=>c.member_id===memberId).map(c=>c.date.slice(0,7)))].sort().reverse();
+  let streak=0;const nowD=new Date();
+  for(let i=0;i<months.length;i++){const expected=new Date(nowD.getFullYear(),nowD.getMonth()-i,1).toISOString().slice(0,7);if(months[i]===expected)streak++;else break}
+  return{contributions:contrib,loans,repayments:repaid,outstanding:total-repaid,streak}
+}
+function getDashboard(chamaId){
+  const members=getMembers(chamaId).length;
+  const contrib=state.contributions.filter(c=>c.chama_id===chamaId).reduce((s,c)=>s+c.amount,0);
+  const loans=state.loans.filter(l=>l.chama_id===chamaId).reduce((s,l)=>s+l.amount,0);
+  const outstanding=state.loans.filter(l=>l.chama_id===chamaId&&l.status==="Active").reduce((s,l)=>s+(l.total-l.paid),0);
+  const repaid=getRepayments(chamaId).reduce((s,r)=>s+r.amount,0);
+  const active=state.loans.filter(l=>l.chama_id===chamaId&&l.status==="Active").length;
+  const overdue=getOverdueLoans(chamaId).length;
+  return{members,contributions:contrib,loans,outstanding,repayments:repaid,active_loans:active,overdue}
+}
+function getOverdueLoans(chamaId){const t=today();return getLoans(chamaId).filter(l=>l.status==="Active"&&l.due_date&&l.due_date<t)}
+function getAlerts(chamaId){
+  const alerts=[];const chama=getChama(chamaId);if(!chama)return alerts;
+  const expected=chama.contribution_amount||0;const ym=yearMonth();let unpaid=0;
+  getMembers(chamaId).forEach(m=>{if(getMonthContribution(m.id,ym)<expected-0.01)unpaid++});
+  if(unpaid)alerts.push("⚠ "+unpaid+" member(s) pending contribution this month");
+  const overdue=getOverdueLoans(chamaId);
+  if(overdue.length)alerts.push("🔴 "+overdue.length+" loan(s) overdue");
+  if(chama.meeting_day)alerts.push("📅 Meeting day: "+chama.meeting_day);
+  return alerts
+}
+function getContributionStatus(chamaId){
+  const chama=getChama(chamaId);const expected=chama.contribution_amount||0;const ym=yearMonth();const members=getMembers(chamaId);
+  let paid=0,pending=0;
+  const list=members.map(m=>{const amount=getMonthContribution(m.id,ym);const status=expected<=0?"paid":(amount>=expected-0.01?"paid":"pending");if(status==="paid")paid++;else pending++;return{...m,paidAmount:amount,status,expected}});
+  return{paid,pending,total:members.length,expected,list}
+}
+
+function navigate(screen){currentScreen=screen;render();window.scrollTo(0,0);resetActivity()}
+function goBack(){const map={register:"login",change_pin:"chamas",create_chama:"chamas",dashboard:"chamas",broadcast:"dashboard",meeting_mode:"dashboard",members:"dashboard",member_profile:"members",contributions:"dashboard",loans:"dashboard",repayments:"dashboard",transactions:"dashboard",chama_settings:"dashboard",status_board:"dashboard"};navigate(map[currentScreen]||"login")}
+function goHome(){navigate(currentUser?"chamas":"login")}
+function logout(){currentUser=null;currentChamaId=null;selectedMemberId=null;isLocked=false;document.getElementById("lock-overlay").style.display="none";navigate("login")}
+
+function header(title,back){back=back!==false;return '<div class="header">'+(back?'<button class="icon-btn" onclick="goBack()">‹</button>':'')+'<h1>'+title+'</h1><button class="icon-btn" onclick="goHome()">⌂</button></div>'}
+
+function render(){
+  const app=document.getElementById("app");let html="";
+  switch(currentScreen){
+    case"login":html=renderLogin();break;
+    case"register":html=renderRegister();break;
+    case"change_pin":html=renderChangePin();break;
+    case"chamas":html=renderChamas();break;
+    case"create_chama":html=renderCreateChama();break;
+    case"dashboard":html=renderDashboard();break;
+    case"broadcast":html=renderBroadcast();break;
+    case"meeting_mode":html=renderMeetingMode();break;
+    case"members":html=renderMembers();break;
+    case"member_profile":html=renderMemberProfile();break;
+    case"contributions":html=renderContributions();break;
+    case"loans":html=renderLoans();break;
+    case"repayments":html=renderRepayments();break;
+    case"transactions":html=renderTransactions();break;
+    case"chama_settings":html=renderChamaSettings();break;
+    case"status_board":html=renderStatusBoard();break;
+    default:html=renderLogin();
+  }
+  app.innerHTML=html;bindEvents();
+}
+
+function renderLogin(){
+  return '<div class="screen active"><div class="auth-hero"><div class="logo">💰</div><h1>Chama Manager</h1><p>Smart • Offline • Beautiful</p></div><input class="input" id="login-phone" type="tel" placeholder="Phone number" autocomplete="tel"/><input class="input" id="login-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN"/><button class="btn mb-12" onclick="doLogin()">LOGIN</button><button class="btn btn-secondary" onclick="navigate(\'register\')">CREATE ACCOUNT</button><div class="spacer"></div><div class="version">v'+APP_VERSION+'</div></div>';
+}
+function renderRegister(){
+  return '<div class="screen active">'+header("Create Account")+'<input class="input" id="reg-name" placeholder="Full name"/><input class="input" id="reg-phone" type="tel" placeholder="Phone number"/><input class="input" id="reg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="Create 4-digit PIN"/><button class="btn" onclick="doRegister()">CREATE ACCOUNT</button></div>';
+}
+function renderChangePin(){
+  return '<div class="screen active">'+header("Change PIN")+'<input class="input" id="pin-old" type="password" inputmode="numeric" maxlength="4" placeholder="Current PIN"/><input class="input" id="pin-new" type="password" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN"/><input class="input" id="pin-confirm" type="password" inputmode="numeric" maxlength="4" placeholder="Confirm new PIN"/><button class="btn" onclick="doChangePin()">UPDATE PIN</button></div>';
+}
+function renderChamas(){
+  const chamas=state.chamas.filter(c=>c.user_id===currentUser.id).sort((a,b)=>b.id-a.id);
+  let list="";
+  if(!chamas.length)list='<div class="empty"><div class="empty-icon">🏦</div>No chamas yet.<br>Create your first one!</div>';
+  else list=chamas.map(c=>'<div class="card" onclick="openChama('+c.id+')"><div class="flex-between"><div style="min-width:0;flex:1"><div class="card-title">'+esc(c.name)+'</div><div class="card-sub">'+esc(c.description||"No description")+'</div></div><button class="btn btn-sm" onclick="event.stopPropagation();openChama('+c.id+')">OPEN</button></div></div>').join("");
+  return '<div class="screen active">'+header("My Chamas",false)+'<div class="greeting"><h2>Hello, '+esc(currentUser.name)+' 👋</h2><p>Manage your savings groups</p></div><div class="btn-row"><button class="btn" onclick="navigate(\'create_chama\')">+ NEW CHAMA</button><button class="btn btn-secondary" onclick="toggleTheme()">🎨</button></div><button class="btn btn-secondary mb-16" onclick="navigate(\'change_pin\')">CHANGE PIN</button><div class="scroll-area">'+list+'</div></div>';
+}
+function renderCreateChama(){
+  return '<div class="screen active">'+header("Create Chama")+'<input class="input" id="chama-name" placeholder="Chama name *"/><input class="input" id="chama-desc" placeholder="Description"/><input class="input" id="chama-amount" type="number" placeholder="Monthly contribution e.g. 2000"/><select class="select" id="chama-freq">'+FREQUENCIES.map(f=>'<option value="'+f+'"'+(f==="Monthly"?" selected":"")+'>'+f+'</option>').join("")+'</select><input class="input" id="chama-day" placeholder="Contribution day e.g. 5th"/><input class="input" id="chama-meet" placeholder="Meeting day e.g. Saturday"/><input class="input" id="chama-loc" placeholder="Meeting location"/><p class="muted mb-12 text-warning">You will automatically become Chairperson</p><button class="btn" onclick="doCreateChama()">CREATE CHAMA</button></div>';
+}
+function renderDashboard(){
+  const chama=getChama(currentChamaId);if(!chama){navigate("chamas");return""}
+  const role=getMemberRole(currentChamaId,currentUser.id)||"Member";
+  const stats=getDashboard(currentChamaId);
+  const alerts=getAlerts(currentChamaId);
+  const alertHtml=alerts.slice(0,3).map(a=>'<div class="alert">'+esc(a)+'</div>').join("");
+  const isAdmin=role==="Chairperson"||role==="Secretary";
+  return '<div class="screen active">'+header(esc(chama.name))+'<div class="flex-between mb-12"><span class="chip">'+esc(role)+'</span><span class="muted" style="font-size:.8rem">'+today()+'</span></div>'+alertHtml+'<div class="stats-grid"><div class="stat-card"><div class="stat-label">Members</div><div class="stat-value">'+stats.members+'</div></div><div class="stat-card"><div class="stat-label">Contributions</div><div class="stat-value">'+formatKES(stats.contributions)+'</div></div><div class="stat-card"><div class="stat-label">Loans</div><div class="stat-value">'+formatKES(stats.loans)+'</div></div><div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value">'+formatKES(stats.outstanding)+'</div></div><div class="stat-card"><div class="stat-label">Repayments</div><div class="stat-value">'+formatKES(stats.repayments)+'</div></div><div class="stat-card"><div class="stat-label">Active / Overdue</div><div class="stat-value">'+stats.active_loans+' / <span class="'+(stats.overdue?"text-danger":"")+'">'+stats.overdue+'</span></div></div></div><div class="scroll-area"><button class="action-btn" onclick="navigate(\'status_board\')"><span class="icon">📊</span> Contribution Status Board</button><button class="action-btn" onclick="navigate(\'members\')"><span class="icon">👥</span> Members</button><button class="action-btn" onclick="navigate(\'contributions\')"><span class="icon">💰</span> Contributions</button><button class="action-btn" onclick="navigate(\'loans\')"><span class="icon">💳</span> Loans</button><button class="action-btn" onclick="navigate(\'repayments\')"><span class="icon">🔄</span> Repayments</button><button class="action-btn" onclick="navigate(\'transactions\')"><span class="icon">📋</span> Transactions</button><button class="action-btn" onclick="navigate(\'meeting_mode\')"><span class="icon">📈</span> Meeting Mode</button>'+(isAdmin?'<button class="action-btn" onclick="navigate(\'broadcast\')"><span class="icon">📢</span> Broadcast Message</button>':'')+(isAdmin?'<button class="action-btn" onclick="navigate(\'chama_settings\')"><span class="icon">⚙</span> Settings</button>':'')+'<button class="action-btn" onclick="exportMenu()"><span class="icon">📤</span> Export CSV</button><button class="action-btn" onclick="doBackup()"><span class="icon">💾</span> Backup Data</button><button class="action-btn" onclick="restoreBackup()"><span class="icon">📥</span> Restore Backup</button><button class="action-btn" onclick="logout()" style="color:var(--danger)"><span class="icon">🚪</span> Logout</button></div><button class="fab" onclick="quickActions()">+</button></div>';
+}
+function renderStatusBoard(){
+  const status=getContributionStatus(currentChamaId);const chama=getChama(currentChamaId);
+  let list=status.list.map(m=>{const isPaid=m.status==="paid";return '<div class="member-status"><div class="avatar" style="background:'+avatarColor(m.name)+'">'+initials(m.name)+'</div><div class="info"><div class="name">'+esc(m.name)+'</div><div class="detail">'+formatKES(m.paidAmount)+' / '+formatKES(m.expected)+'</div></div><span class="chip '+(isPaid?"chip-success":"chip-warning")+'">'+(isPaid?"✓ Paid":"Pending")+'</span></div>'}).join("")||'<div class="empty"><div class="empty-icon">👥</div>No members yet</div>';
+  return '<div class="screen active">'+header("Status Board")+'<p class="muted mb-12">'+esc(chama.name)+' • '+yearMonth()+'</p><div class="status-board"><div class="status-pill paid"><div class="num">'+status.paid+'</div><div class="lbl">Paid</div></div><div class="status-pill pending"><div class="num">'+status.pending+'</div><div class="lbl">Pending</div></div><div class="status-pill"><div class="num">'+status.total+'</div><div class="lbl">Total</div></div></div><div class="scroll-area">'+list+'</div></div>';
+}
+function renderBroadcast(){
+  const chama=getChama(currentChamaId);
+  return '<div class="screen active">'+header("Broadcast Message")+'<p class="text-primary bold mb-8">'+esc(chama.name)+'</p><p class="section-title">Quick Templates</p><div class="template-grid">'+BROADCAST_TEMPLATES.map(t=>'<button class="template-chip" onclick="applyTemplate(\''+t.id+'\')">'+t.label+'</button>').join("")+'</div><textarea class="textarea" id="broadcast-msg" placeholder="Write your message or pick a template above..."></textarea><button class="btn mb-12" onclick="shareMessage()">📤 SHARE MESSAGE</button><button class="btn btn-secondary" onclick="copyMessageOnly()">Copy to Clipboard</button></div>';
+}
+function applyTemplate(id){
+  const t=BROADCAST_TEMPLATES.find(x=>x.id===id);if(!t)return;
+  const chama=getChama(currentChamaId);
+  let final=t.text.replace(/{amount}/g,formatKES(chama.contribution_amount||0)).replace(/{day}/g,chama.contribution_day||chama.meeting_day||"this period").replace(/{location}/g,chama.meeting_location||"the usual place").replace(/{chama}/g,chama.name).replace(/{frequency}/g,chama.contribution_frequency||"Monthly");
+  document.getElementById("broadcast-msg").value=final;
+}
+function renderMeetingMode(){
+  const chama=getChama(currentChamaId);const stats=getDashboard(currentChamaId);const status=getContributionStatus(currentChamaId);
+  return '<div class="screen active">'+header("Meeting Mode")+'<h2 class="text-primary mb-8" style="font-size:1.4rem;font-weight:800">'+esc(chama.name)+'</h2><p class="muted mb-16">Key figures for today\'s meeting</p><div class="meeting-stat"><div class="label">Total Contributions</div><div class="value">'+formatKES(stats.contributions)+'</div></div><div class="meeting-stat"><div class="label">Outstanding Loans</div><div class="value">'+formatKES(stats.outstanding)+'</div></div><div class="meeting-stat"><div class="label">This Month Paid / Pending</div><div class="value"><span class="text-success">'+status.paid+'</span> / <span class="text-warning">'+status.pending+'</span></div></div><div class="meeting-stat"><div class="label">Active Loans</div><div class="value">'+stats.active_loans+'</div></div><div class="meeting-stat"><div class="label">Overdue Loans</div><div class="value text-danger">'+stats.overdue+'</div></div><div class="meeting-stat"><div class="label">Total Members</div><div class="value">'+stats.members+'</div></div><div class="spacer"></div><button class="btn btn-secondary" onclick="navigate(\'dashboard\')">EXIT MEETING MODE</button></div>';
+}
+function renderMembers(){
+  const role=getMemberRole(currentChamaId,currentUser.id);
+  const isAdmin=role==="Chairperson"||role==="Secretary";
+  const isChair=role==="Chairperson";
+  const chama=getChama(currentChamaId);const expected=chama.contribution_amount||0;const ym=yearMonth();
+  const members=getMembers(currentChamaId,(document.getElementById("member-search")||{}).value||"");
+  let list="";
+  if(!members.length)list='<div class="empty"><div class="empty-icon">👥</div>No members found</div>';
+  else list=members.map(m=>{
+    const paid=getMonthContribution(m.id,ym);const progress=expected>0?Math.min(paid/expected,1):0;const stats=memberStats(m.id);
+    return '<div class="card"><div class="flex-between"><div class="flex-center"><div style="width:36px;height:36px;border-radius:10px;background:'+avatarColor(m.name)+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#fff;margin-right:10px">'+initials(m.name)+'</div><div><div class="card-title" style="font-size:.95rem">'+esc(m.name)+'</div><div class="card-sub">'+esc(m.phone||"No phone")+' • '+esc(m.role)+'</div></div></div>'+(stats.streak?'<span class="text-warning bold" style="font-size:.85rem">🔥 '+stats.streak+'</span>':'')+'</div><div class="progress-wrap"><div class="progress"><div class="progress-bar'+(progress>=1?' full':'')+'" style="width:'+(progress*100)+'%"></div></div><span class="muted" style="font-size:.78rem">'+Math.round(progress*100)+'%</span></div><div class="muted" style="font-size:.78rem">This month: '+formatKES(paid)+' / '+formatKES(expected)+'</div><div class="btn-row mt-8" style="margin-bottom:0"><button class="btn btn-sm" onclick="viewMember('+m.id+')">VIEW</button>'+(isChair&&m.user_id!==currentUser.id?'<button class="btn btn-sm btn-secondary" onclick="editMember('+m.id+')">EDIT</button><button class="btn btn-sm btn-danger" onclick="deleteMember('+m.id+')">DEL</button>':'')+'</div></div>';
+  }).join("");
+  return '<div class="screen active">'+header("Members")+'<input class="input" id="member-search" placeholder="Search name, phone or role" oninput="render()"/>'+(isAdmin?'<button class="btn mb-12" onclick="addMember()">+ ADD MEMBER</button>':'')+'<div class="scroll-area">'+list+'</div></div>';
+}
+function renderMemberProfile(){
+  const m=getMember(selectedMemberId);if(!m){navigate("members");return""}
+  const stats=memberStats(m.id);
+  return '<div class="screen active">'+header("Profile")+'<div class="flex-center mb-12"><div style="width:56px;height:56px;border-radius:16px;background:'+avatarColor(m.name)+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.3rem;color:#fff;margin-right:14px">'+initials(m.name)+'</div><div><h2 style="font-size:1.3rem;font-weight:800">'+esc(m.name)+'</h2><p class="muted">'+esc(m.phone||"No phone")+' • '+esc(m.role)+'</p></div></div>'+(stats.streak?'<p class="text-warning bold mb-12">🔥 '+stats.streak+' month contribution streak</p>':'')+'<div class="stats-grid"><div class="stat-card"><div class="stat-label">Contributions</div><div class="stat-value">'+formatKES(stats.contributions)+'</div></div><div class="stat-card"><div class="stat-label">Loans</div><div class="stat-value">'+formatKES(stats.loans)+'</div></div><div class="stat-card"><div class="stat-label">Repaid</div><div class="stat-value">'+formatKES(stats.repayments)+'</div></div><div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value">'+formatKES(stats.outstanding)+'</div></div></div><button class="btn mb-8" onclick="showMemberHistory(\'contrib\')">Contribution History</button><button class="btn mb-8" onclick="showMemberHistory(\'loans\')">Loan History</button><button class="btn mb-8" onclick="showMemberHistory(\'repay\')">Repayment History</button><button class="btn btn-secondary" onclick="navigate(\'members\')">‹ Back to Members</button></div>';
+}
+function renderContributions(){
+  const role=getMemberRole(currentChamaId,currentUser.id);const canAdd=role==="Chairperson"||role==="Treasurer";
+  const search=(document.getElementById("contrib-search")||{}).value||"";
+  const rows=getContributions(currentChamaId,search);
+  let list=rows.length?rows.map(r=>'<div class="list-item" onclick="showReceipt(\'contribution\','+r.id+')"><div class="flex-between"><div class="title">'+esc(r.member_name)+'</div><span class="chip chip-success">'+formatKESDec(r.amount)+'</span></div><div class="meta">'+r.date.slice(0,16)+' • '+esc(r.reference)+' • Tap for receipt</div></div>').join(""):'<div class="empty"><div class="empty-icon">💰</div>No contributions yet</div>';
+  return '<div class="screen active">'+header("Contributions")+(canAdd?'<button class="btn mb-12" onclick="addContribution()">+ RECORD CONTRIBUTION</button>':'')+'<input class="input" id="contrib-search" placeholder="Search member or reference" oninput="render()" value="'+esc(search)+'"/><div class="scroll-area">'+list+'</div></div>';
+}
+function renderLoans(){
+  const role=getMemberRole(currentChamaId,currentUser.id);const canAdd=role==="Chairperson"||role==="Treasurer";
+  const loans=getLoans(currentChamaId);const t=today();
+  let list=loans.length?loans.map(l=>{
+    const bal=l.total-l.paid;const overdue=l.status==="Active"&&l.due_date&&l.due_date<t;
+    const status=overdue?"OVERDUE":l.status;const chip=overdue?"chip-danger":(l.status==="Completed"?"chip-success":"chip-warning");
+    return '<div class="list-item"><div class="flex-between"><div class="title">'+esc(l.member_name)+'</div><span class="chip '+chip+'">'+status+'</span></div><div class="meta">'+formatKES(l.amount)+' + '+l.interest+'% → '+formatKES(l.total)+'<br>Paid '+formatKES(l.paid)+' | Bal '+formatKES(bal)+'<br>Due: '+(l.due_date||"—")+'</div><button class="btn btn-sm btn-secondary mt-8" onclick="showLoanSchedule('+l.id+')">📅 View Schedule</button></div>';
+  }).join(""):'<div class="empty"><div class="empty-icon">💳</div>No loans yet</div>';
+  return '<div class="screen active">'+header("Loans")+(canAdd?'<button class="btn mb-12" onclick="addLoan()">+ CREATE LOAN</button>':'')+'<div class="scroll-area">'+list+'</div></div>';
+}
+function renderRepayments(){
+  const role=getMemberRole(currentChamaId,currentUser.id);const canAdd=role==="Chairperson"||role==="Treasurer";
+  const rows=getRepayments(currentChamaId);
+  let list=rows.length?rows.map(r=>'<div class="list-item" onclick="showReceipt(\'repayment\','+r.id+')"><div class="flex-between"><div class="title">'+esc(r.member_name)+'</div><span class="chip chip-info">'+formatKESDec(r.amount)+'</span></div><div class="meta">'+r.date.slice(0,16)+' • '+esc(r.reference)+' • Tap for receipt</div></div>').join(""):'<div class="empty"><div class="empty-icon">🔄</div>No repayments yet</div>';
+  return '<div class="screen active">'+header("Repayments")+(canAdd?'<button class="btn mb-12" onclick="addRepayment()">+ RECORD REPAYMENT</button>':'')+'<div class="scroll-area">'+list+'</div></div>';
+}
+function renderTransactions(){
+  const search=((document.getElementById("tx-search")||{}).value||"").toLowerCase();
+  let items=[];
+  getContributions(currentChamaId).forEach(r=>{if(search&&!r.member_name.toLowerCase().includes(search)&&!(r.reference||"").toLowerCase().includes(search))return;items.push({date:r.date,type:"CONTRIBUTION",color:"text-success",text:r.member_name+" • "+formatKESDec(r.amount)+"<br>"+r.date.slice(0,16)+" • "+r.reference})});
+  getLoans(currentChamaId).forEach(r=>{if(search&&!r.member_name.toLowerCase().includes(search))return;items.push({date:r.date,type:"LOAN",color:"text-warning",text:r.member_name+" • "+formatKES(r.amount)+"<br>"+r.date.slice(0,16)+" • "+r.reference})});
+  getRepayments(currentChamaId).forEach(r=>{if(search&&!r.member_name.toLowerCase().includes(search))return;items.push({date:r.date,type:"REPAYMENT",color:"text-info",text:r.member_name+" • "+formatKESDec(r.amount)+"<br>"+r.date.slice(0,16)+" • "+r.reference})});
+  items.sort((a,b)=>b.date.localeCompare(a.date));
+  let list=items.length?items.map(i=>'<div class="list-item"><div class="title '+i.color+'">'+i.type+'</div><div class="meta">'+i.text+'</div></div>').join(""):'<div class="empty"><div class="empty-icon">📋</div>No transactions found</div>';
+  return '<div class="screen active">'+header("Transactions")+'<input class="input" id="tx-search" placeholder="Search" oninput="render()" value="'+esc(search)+'"/><div class="scroll-area">'+list+'</div></div>';
+}
+function renderChamaSettings(){
+  const role=getMemberRole(currentChamaId,currentUser.id);
+  if(role!=="Chairperson"&&role!=="Secretary"){toast("No permission",false);navigate("dashboard");return""}
+  const c=getChama(currentChamaId);
+  return '<div class="screen active">'+header("Settings")+'<input class="input" id="set-name" placeholder="Chama name" value="'+esc(c.name)+'"/><input class="input" id="set-desc" placeholder="Description" value="'+esc(c.description||"")+'"/><input class="input" id="set-amount" type="number" placeholder="Contribution amount" value="'+(c.contribution_amount||0)+'"/><select class="select" id="set-freq">'+FREQUENCIES.map(f=>'<option value="'+f+'"'+(f===(c.contribution_frequency||"Monthly")?" selected":"")+'>'+f+'</option>').join("")+'</select><input class="input" id="set-day" placeholder="Contribution day" value="'+esc(c.contribution_day||"")+'"/><input class="input" id="set-meet" placeholder="Meeting day" value="'+esc(c.meeting_day||"")+'"/><input class="input" id="set-loc" placeholder="Location" value="'+esc(c.meeting_location||"")+'"/><button class="btn" onclick="saveSettings()">SAVE CHANGES</button></div>';
+}
+
+function doLogin(){
+  const phone=document.getElementById("login-phone").value.trim();
+  const pin=document.getElementById("login-pin").value.trim();
+  const user=state.users.find(u=>u.phone===phone);
+  if(!user||hashPin(pin,user.salt)!==user.pin){toast("Invalid phone or PIN",false);return}
+  currentUser=user;applyTheme(user.theme||"dark");resetActivity();navigate("chamas");
+}
+function doRegister(){
+  const name=document.getElementById("reg-name").value.trim();
+  const phone=document.getElementById("reg-phone").value.trim();
+  const pin=document.getElementById("reg-pin").value.trim();
+  if(!name||!phone||!pin){toast("Please fill all fields",false);return}
+  if(pin.length!==4||!/^\d+$/.test(pin)){toast("PIN must be exactly 4 digits",false);return}
+  if(state.users.some(u=>u.phone===phone)){toast("Phone already registered",false);return}
+  const salt=makeSalt();
+  const user={id:uid("user"),name,phone,pin:hashPin(pin,salt),salt,theme:"dark",created_at:now()};
+  state.users.push(user);save();currentUser=user;applyTheme("dark");toast("Account created");navigate("chamas");
+}
+function doChangePin(){
+  const oldP=document.getElementById("pin-old").value.trim();
+  const newP=document.getElementById("pin-new").value.trim();
+  const conf=document.getElementById("pin-confirm").value.trim();
+  if(newP!==conf){toast("New PINs do not match",false);return}
+  if(hashPin(oldP,currentUser.salt)!==currentUser.pin){toast("Current PIN is incorrect",false);return}
+  if(newP.length!==4||!/^\d+$/.test(newP)){toast("New PIN must be 4 digits",false);return}
+  const salt=makeSalt();currentUser.pin=hashPin(newP,salt);currentUser.salt=salt;
+  const idx=state.users.findIndex(u=>u.id===currentUser.id);state.users[idx]=currentUser;save();
+  toast("PIN updated successfully");navigate("chamas");
+}
+function toggleTheme(){
+  const newT=theme==="dark"?"light":"dark";applyTheme(newT);
+  currentUser.theme=newT;const idx=state.users.findIndex(u=>u.id===currentUser.id);
+  if(idx>=0)state.users[idx].theme=newT;save();render();
+}
+function doCreateChama(){
+  const name=document.getElementById("chama-name").value.trim();
+  if(!name){toast("Chama name is required",false);return}
+  let amount=0;try{amount=parseFloat(document.getElementById("chama-amount").value)||0}catch(e){toast("Amount must be a number",false);return}
+  const chama={id:uid("chama"),user_id:currentUser.id,name,description:document.getElementById("chama-desc").value.trim(),contribution_amount:amount,contribution_frequency:document.getElementById("chama-freq").value,contribution_day:document.getElementById("chama-day").value.trim(),meeting_day:document.getElementById("chama-meet").value.trim(),meeting_location:document.getElementById("chama-loc").value.trim(),created_at:now()};
+  state.chamas.push(chama);
+  state.members.push({id:uid("member"),chama_id:chama.id,user_id:currentUser.id,name:currentUser.name,phone:currentUser.phone,role:"Chairperson",created_at:now()});
+  save();currentChamaId=chama.id;toast("Chama created successfully");navigate("dashboard");
+}
+function openChama(id){currentChamaId=id;navigate("dashboard")}
+function quickActions(){
+  openModal('<h2>Quick Actions</h2><button class="btn mb-8" onclick="closeModal();navigate(\'contributions\')">💰 Record Contribution</button><button class="btn mb-8" onclick="closeModal();navigate(\'loans\')">💳 Give Loan</button><button class="btn mb-8" onclick="closeModal();navigate(\'repayments\')">🔄 Record Repayment</button><button class="btn mb-8" onclick="closeModal();navigate(\'members\')">👥 Add Member</button><button class="btn mb-8 btn-accent" onclick="closeModal();navigate(\'status_board\')">📊 Status Board</button><button class="btn btn-secondary" onclick="closeModal()">Close</button>');
+}
+function exportMenu(){
+  openModal('<h2>Export CSV</h2><button class="btn mb-8" onclick="doExport(\'full\')">Full Report</button><button class="btn mb-8" onclick="doExport(\'members\')">Members Only</button><button class="btn mb-8" onclick="doExport(\'contributions\')">Contributions</button><button class="btn mb-8" onclick="doExport(\'loans\')">Loans</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>');
+}
+function doExport(type){
+  closeModal();const chama=getChama(currentChamaId);
+  const safe=(chama.name||"chama").replace(/[^a-z0-9]/gi,"_").slice(0,20);
+  const ts=new Date().toISOString().slice(0,19).replace(/[:T]/g,"");
+  let csv="";
+  if(type==="full"||type==="members"){csv+="MEMBERS\nID,Name,Phone,Role,Joined\n";getMembers(currentChamaId).forEach(m=>{csv+=m.id+',"'+m.name+'","'+(m.phone||"")+'","'+m.role+'","'+m.created_at+'"\n'});csv+="\n"}
+  if(type==="full"||type==="contributions"){csv+="CONTRIBUTIONS\nDate,Member,Amount,Reference,Note\n";getContributions(currentChamaId).forEach(c=>{csv+='"'+c.date+'","'+c.member_name+'",'+c.amount+',"'+c.reference+'","'+(c.note||"")+'"\n'});csv+="\n"}
+  if(type==="full"||type==="loans"){csv+="LOANS\nDate,Member,Amount,Interest%,Total,Paid,Balance,Status,Due,Ref\n";getLoans(currentChamaId).forEach(l=>{const bal=l.total-l.paid;csv+='"'+l.date+'","'+l.member_name+'",'+l.amount+','+l.interest+','+l.total+','+l.paid+','+bal+',"'+l.status+'","'+(l.due_date||"")+'","'+l.reference+'"\n'})}
+  const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=safe+"_"+type+"_"+ts+".csv";a.click();toast("CSV downloaded");
+}
+function doBackup(){
+  const data=JSON.stringify(state,null,2);const blob=new Blob([data],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="chama_backup_"+new Date().toISOString().slice(0,19).replace(/[:T]/g,"")+".json";a.click();toast("Backup downloaded");
+}
+function restoreBackup(){
+  openModal('<h2>Restore Backup</h2><p class="muted mb-12">Select a previously downloaded .json backup file. This will replace all current data.</p><input type="file" id="restore-file" accept=".json" class="input" style="padding:12px"/><button class="btn btn-danger mb-8" onclick="doRestore()">RESTORE DATA</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>');
+}
+function doRestore(){
+  const fileInput=document.getElementById("restore-file");
+  if(!fileInput.files.length){toast("Please select a file",false);return}
+  const reader=new FileReader();
+  reader.onload=function(e){try{const data=JSON.parse(e.target.result);if(!data.users||!data.chamas)throw new Error("Invalid");state={...state,...data};save();closeModal();toast("Backup restored successfully");logout()}catch(err){toast("Invalid backup file",false)}};
+  reader.readAsText(fileInput.files[0]);
+}
+function shareMessage(){
+  const text=document.getElementById("broadcast-msg").value.trim();
+  if(!text){toast("Please write a message first",false);return}
+  const chama=getChama(currentChamaId);const full="📢 "+chama.name+"\n\n"+text+"\n\n— Sent via Chama Manager";
+  if(navigator.share)navigator.share({text:full}).then(()=>toast("Share menu opened")).catch(()=>copyText(full));
+  else copyText(full);
+}
+function copyMessageOnly(){
+  const text=document.getElementById("broadcast-msg").value.trim();
+  if(!text){toast("Please write a message first",false);return}
+  const chama=getChama(currentChamaId);const full="📢 "+chama.name+"\n\n"+text+"\n\n— Sent via Chama Manager";
+  copyText(full);
+}
+function copyText(msg){
+  if(navigator.clipboard)navigator.clipboard.writeText(msg).then(()=>toast("Copied! Paste in WhatsApp or SMS"));
+  else{const ta=document.createElement("textarea");ta.value=msg;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);toast("Copied to clipboard!")}
+}
+function addMember(){memberPopup(null)}
+function editMember(id){memberPopup(id)}
+function memberPopup(mid){
+  const member=mid?getMember(mid):null;
+  openModal('<h2>'+(member?"Edit Member":"Add Member")+'</h2><input class="input" id="m-name" placeholder="Member name" value="'+(member?esc(member.name):"")+'"/><input class="input" id="m-phone" placeholder="Phone" value="'+(member?esc(member.phone||""):"")+'"/><select class="select" id="m-role">'+["Member","Treasurer","Secretary"].map(r=>'<option value="'+r+'"'+(member&&member.role===r?" selected":"")+'>'+r+'</option>').join("")+'</select><button class="btn" onclick="saveMember('+(mid||"null")+')">SAVE</button>');
+}
+function saveMember(mid){
+  const name=document.getElementById("m-name").value.trim();
+  if(!name){toast("Name is required",false);return}
+  const phone=document.getElementById("m-phone").value.trim();const role=document.getElementById("m-role").value;
+  if(mid){const m=getMember(mid);m.name=name;m.phone=phone;m.role=role}
+  else state.members.push({id:uid("member"),chama_id:currentChamaId,user_id:null,name,phone,role,created_at:now()});
+  save();closeModal();toast("Saved");render();
+}
+function deleteMember(mid){
+  const m=getMember(mid);if(!m)return;
+  if(state.contributions.some(c=>c.member_id===mid)||state.loans.some(l=>l.member_id===mid)){toast("Member has financial records. Cannot delete.",false);return}
+  openModal('<h2>Delete Member</h2><p class="mb-16">Delete <strong>'+esc(m.name)+'</strong> permanently?</p><div class="btn-row"><button class="btn btn-secondary" onclick="closeModal()">CANCEL</button><button class="btn btn-danger" onclick="confirmDeleteMember('+mid+')">CONFIRM</button></div>');
+}
+function confirmDeleteMember(mid){state.members=state.members.filter(m=>m.id!==mid);save();closeModal();toast("Member deleted");render()}
+function viewMember(id){selectedMemberId=id;navigate("member_profile")}
+function showMemberHistory(type){
+  let rows,title,fmt;
+  if(type==="contrib"){rows=state.contributions.filter(c=>c.member_id===selectedMemberId).sort((a,b)=>b.id-a.id);title="Contributions";fmt=r=>formatKESDec(r.amount)+"<br>"+r.date+"<br>"+r.reference}
+  else if(type==="loans"){rows=state.loans.filter(l=>l.member_id===selectedMemberId).sort((a,b)=>b.id-a.id);title="Loans";fmt=r=>formatKES(r.amount)+" + "+r.interest+"%<br>Bal: "+formatKES(r.total-r.paid)+"<br>"+r.status+" • Due: "+(r.due_date||"—")}
+  else{rows=state.repayments.filter(r=>{const loan=state.loans.find(l=>l.id===r.loan_id);return loan&&loan.member_id===selectedMemberId}).sort((a,b)=>b.id-a.id);title="Repayments";fmt=r=>{const loan=state.loans.find(l=>l.id===r.loan_id);return formatKESDec(r.amount)+"<br>"+r.date+"<br>"+(loan?loan.reference:"")}}
+  if(!rows.length){toast("No records found",false);return}
+  openModal('<h2>'+title+'</h2>'+rows.map(r=>'<div class="list-item"><div class="meta">'+fmt(r)+'</div></div>').join("")+'<button class="btn btn-secondary mt-8" onclick="closeModal()">Close</button>');
+}
+function addContribution(){
+  const members=getMembers(currentChamaId);if(!members.length){toast("Add members first",false);return}
+  const chama=getChama(currentChamaId);
+  openModal('<h2>Record Contribution</h2><select class="select" id="c-member">'+members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join("")+'</select><input class="input" id="c-amount" type="number" placeholder="Amount" value="'+(chama.contribution_amount||"")+'"/><input class="input" id="c-note" placeholder="Note (optional)"/><button class="btn" onclick="saveContribution()">SAVE</button>');
+}
+function saveContribution(){
+  const mid=parseInt(document.getElementById("c-member").value);
+  const val=parseFloat(document.getElementById("c-amount").value);
+  if(!mid||isNaN(val)||val<=0){toast("Invalid member or amount",false);return}
+  const id=uid("contribution");
+  state.contributions.push({id,chama_id:currentChamaId,member_id:mid,amount:val,note:document.getElementById("c-note").value.trim(),reference:"CONT-"+Date.now(),date:now()});
+  save();closeModal();toast("Contribution saved");render();
+  setTimeout(()=>showReceipt("contribution",id),400);
+}
+function addLoan(){
+  const members=getMembers(currentChamaId);if(!members.length){toast("Add members first",false);return}
+  const due=new Date();due.setDate(due.getDate()+30);
+  openModal('<h2>Create Loan</h2><select class="select" id="l-member">'+members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join("")+'</select><input class="input" id="l-amount" type="number" placeholder="Loan amount" oninput="previewSchedule()"/><input class="input" id="l-interest" type="number" placeholder="Interest %" value="10" oninput="previewSchedule()"/><input class="input" id="l-months" type="number" placeholder="Repayment months" value="3" oninput="previewSchedule()"/><input class="input" id="l-due" type="date" value="'+due.toISOString().slice(0,10)+'"/><div id="schedule-preview"></div><button class="btn" onclick="saveLoan()">CREATE LOAN</button>');
+  setTimeout(previewSchedule,100);
+}
+function previewSchedule(){
+  const amount=parseFloat((document.getElementById("l-amount")||{}).value)||0;
+  const interest=parseFloat((document.getElementById("l-interest")||{}).value)||0;
+  const months=parseInt((document.getElementById("l-months")||{}).value)||1;
+  const total=amount+(amount*interest/100);const monthly=total/months;
+  const el=document.getElementById("schedule-preview");if(!el||amount<=0){if(el)el.innerHTML="";return}
+  let rows="";for(let i=1;i<=Math.min(months,12);i++)rows+="<tr><td>Month "+i+"</td><td>"+formatKES(monthly)+"</td><td>"+formatKES(total-monthly*i)+"</td></tr>";
+  el.innerHTML='<p class="section-title">Repayment Schedule</p><div class="list-item" style="padding:10px 14px;margin-bottom:8px"><div class="meta">Principal: '+formatKES(amount)+' + '+interest+'% interest = <strong>'+formatKES(total)+'</strong></div><div class="meta">Monthly: <strong>'+formatKES(monthly)+'</strong> × '+months+' months</div></div><table class="schedule-table"><thead><tr><th>Period</th><th>Payment</th><th>Balance</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function saveLoan(){
+  const mid=parseInt(document.getElementById("l-member").value);
+  const val=parseFloat(document.getElementById("l-amount").value);
+  const inter=parseFloat(document.getElementById("l-interest").value)||0;
+  const months=parseInt(document.getElementById("l-months").value)||1;
+  if(!mid||isNaN(val)||val<=0){toast("Invalid values",false);return}
+  const total=val+(val*inter/100);
+  state.loans.push({id:uid("loan"),chama_id:currentChamaId,member_id:mid,amount:val,interest:inter,total,paid:0,status:"Active",due_date:document.getElementById("l-due").value||null,months,reference:"LOAN-"+Date.now(),date:now()});
+  save();closeModal();toast("Loan created");render();
+}
+function showLoanSchedule(loanId){
+  const loan=state.loans.find(l=>l.id===loanId);if(!loan)return;
+  const months=loan.months||3;const monthly=loan.total/months;
+  let rows="";for(let i=1;i<=months;i++){const isDone=loan.paid>=monthly*i-0.01;rows+="<tr><td>Month "+i+"</td><td>"+formatKES(monthly)+"</td><td>"+(isDone?'<span class="chip chip-success">Paid</span>':formatKES(Math.max(0,loan.total-monthly*i)))+"</td></tr>"}
+  openModal('<h2>Loan Schedule</h2><p class="muted mb-8">'+esc((getMember(loan.member_id)||{}).name||"")+' • '+loan.reference+'</p><div class="list-item" style="margin-bottom:12px"><div class="meta">Principal: '+formatKES(loan.amount)+' + '+loan.interest+'%</div><div class="meta">Total: <strong>'+formatKES(loan.total)+'</strong> | Paid: '+formatKES(loan.paid)+' | Bal: '+formatKES(loan.total-loan.paid)+'</div></div><table class="schedule-table"><thead><tr><th>Period</th><th>Payment</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table><button class="btn btn-secondary mt-8" onclick="closeModal()">Close</button>');
+}
+function addRepayment(){
+  const active=getLoans(currentChamaId).filter(l=>l.status==="Active");
+  if(!active.length){toast("No active loans",false);return}
+  openModal('<h2>Record Repayment</h2><select class="select" id="r-loan">'+active.map(l=>'<option value="'+l.id+'">'+esc(l.member_name)+' (Bal '+formatKES(l.total-l.paid)+')</option>').join("")+'</select><input class="input" id="r-amount" type="number" placeholder="Repayment amount"/><button class="btn" onclick="saveRepayment()">SAVE</button>');
+}
+function saveRepayment(){
+  const lid=parseInt(document.getElementById("r-loan").value);
+  const val=parseFloat(document.getElementById("r-amount").value);
+  const loan=state.loans.find(l=>l.id===lid);if(!loan){toast("Loan not found",false);return}
+  const balance=loan.total-loan.paid;
+  if(isNaN(val)||val<=0){toast("Amount must be greater than zero",false);return}
+  if(val>balance+0.01){toast("Maximum repayment is "+formatKES(balance),false);return}
+  const id=uid("repayment");
+  state.repayments.push({id,loan_id:lid,amount:val,reference:"REP-"+Date.now(),date:now()});
+  loan.paid+=val;loan.status=loan.paid>=loan.total-0.01?"Completed":"Active";
+  save();closeModal();toast("Repayment recorded");render();
+  setTimeout(()=>showReceipt("repayment",id),400);
+}
+function showReceipt(type,id){
+  let title,rows,total,ref,date,memberName;const chama=getChama(currentChamaId);
+  if(type==="contribution"){
+    const c=state.contributions.find(x=>x.id===id);if(!c)return;
+    const m=getMember(c.member_id);title="Contribution Receipt";memberName=m?m.name:"Unknown";ref=c.reference;date=c.date;total=c.amount;
+    rows='<div class="receipt-row"><span class="label">Member</span><span class="val">'+esc(memberName)+'</span></div><div class="receipt-row"><span class="label">Type</span><span class="val">Contribution</span></div>'+(c.note?'<div class="receipt-row"><span class="label">Note</span><span class="val">'+esc(c.note)+'</span></div>':'');
+  }else{
+    const r=state.repayments.find(x=>x.id===id);if(!r)return;
+    const loan=state.loans.find(l=>l.id===r.loan_id);const m=getMember(loan.member_id);
+    title="Repayment Receipt";memberName=m?m.name:"Unknown";ref=r.reference;date=r.date;total=r.amount;
+    rows='<div class="receipt-row"><span class="label">Member</span><span class="val">'+esc(memberName)+'</span></div><div class="receipt-row"><span class="label">Type</span><span class="val">Loan Repayment</span></div><div class="receipt-row"><span class="label">Loan Ref</span><span class="val">'+esc(loan.reference)+'</span></div><div class="receipt-row"><span class="label">Remaining</span><span class="val">'+formatKES(loan.total-loan.paid)+'</span></div>';
+  }
+  openModal('<h2>'+title+'</h2><div class="receipt" id="receipt-content"><div class="receipt-header"><div class="logo-r">💰</div><h3>'+esc(chama.name)+'</h3><div style="font-size:.8rem;color:#64748b">'+esc(title)+'</div></div>'+rows+'<div class="receipt-row"><span class="label">Reference</span><span class="val">'+esc(ref)+'</span></div><div class="receipt-row"><span class="label">Date</span><span class="val">'+date.slice(0,16)+'</span></div><div class="receipt-total"><span>Amount</span><span>'+formatKESDec(total)+'</span></div><div class="receipt-footer">Generated by Chama Manager v'+APP_VERSION+'</div></div><button class="btn mt-12 mb-8" onclick="shareReceipt()">📤 Share Receipt</button><button class="btn btn-secondary" onclick="closeModal()">Close</button>');
+}
+function shareReceipt(){
+  const el=document.getElementById("receipt-content");if(!el)return;
+  const text=el.innerText;
+  if(navigator.share)navigator.share({text}).then(()=>toast("Share opened")).catch(()=>copyText(text));
+  else copyText(text);
+}
+function saveSettings(){
+  const name=document.getElementById("set-name").value.trim();
+  if(!name){toast("Name required",false);return}
+  let amount=0;try{amount=parseFloat(document.getElementById("set-amount").value)||0}catch(e){toast("Invalid amount",false);return}
+  const c=getChama(currentChamaId);
+  c.name=name;c.description=document.getElementById("set-desc").value.trim();c.contribution_amount=amount;
+  c.contribution_frequency=document.getElementById("set-freq").value;c.contribution_day=document.getElementById("set-day").value.trim();
+  c.meeting_day=document.getElementById("set-meet").value.trim();c.meeting_location=document.getElementById("set-loc").value.trim();
+  save();toast("Settings saved");navigate("dashboard");
+}
+function bindEvents(){
+  const pin=document.getElementById("login-pin");
+  if(pin)pin.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});
+}
+
+load();applyTheme("dark");render();
+</script>
+</body>
+</html>
